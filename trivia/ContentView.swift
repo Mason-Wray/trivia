@@ -58,7 +58,7 @@ struct ContentView: View {
 
     
     let correctMessages = ["Good", "Proceed", "Satisfactory", "Decent", ":thumbsup:", "alr", "yummers"]
-    let incorrectMessages = ["Womp Womp.", "25% to get it right and you still fumbled", "Wahh wahh wahh.", "GET OUT", "guh", "|:", "Do something cool..."]
+    let incorrectMessages = ["Womp Womp.", "25% to get it right and you still fumbled", "Wahh wahh wahh.", "GET OUT", "guh", "|:", "Do something cool...", "And the crowd goes home!", "Fail", "You are not alpha and you do not have sigma rizz", "Obnoxiously loud incorrect buzzer", "Not by a longshot...", "I made this quiz for you to fail it? Inconsiderate...", "Unfortunate", "Augh", "Maybe if you were colorblind you wouldve thought you got this right.", "Nope", "Yk some of these rely on common sense..."]
     @State private var questionIndex = 0
     @State private var score = 0
     @State private var message = ""
