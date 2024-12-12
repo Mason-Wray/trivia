@@ -6,13 +6,18 @@
 //
 
 import SwiftUI
-
+import UIKit
 
 struct ContentView: View {
     struct Question {
         let question: String
         let answers: [String]
         let correctAnswer: Int
+        var shuffledAnswers: [(index: Int, answer: String)]{
+            answers.enumerated().shuffled().map {
+                (index, answer) in (index: index, answer: answer)
+            }
+        }
     }
     @State private var questions = [
         Question(question: "What is the boiling point of iron?", answers: ["1,518°C", "2,861°C", "3,021°C", "2,891°C"], correctAnswer: 1),
@@ -52,86 +57,109 @@ struct ContentView: View {
     ].shuffled()
 
     
-    let correctMessages = ["Good", "Proceed", "Satisfactory", "Decent"]
-    let incorrectMessages = ["Womp Womp.", "25% to get it right and you still fumbled", "Wahh wahh wahh.", "GET OUT"]
+    let correctMessages = ["Good", "Proceed", "Satisfactory", "Decent", ":thumbsup:", "alr", "yummers"]
+    let incorrectMessages = ["Womp Womp.", "25% to get it right and you still fumbled", "Wahh wahh wahh.", "GET OUT", "guh", "|:", "Do something cool..."]
     @State private var questionIndex = 0
     @State private var score = 0
     @State private var message = ""
     @State private var isAnswered = false
     @State private var isCorrect = true
-    @State private var currentColor = Color.white
+
     @State private var startColor = Color.white
     @State private var endColor = Color.white
     @State private var progress: CGFloat = 0.0
+    @State private var progresse: CGFloat = 0.0
     @State private var isAnimating = false
     @State private var textRotation: Angle = .zero
+    private var offset: CGFloat = 0.0
+    private var timer: CADisplayLink?
     @State private var textOffset: CGSize = .zero
     @State private var shakeAmount: CGFloat = 0
     var correctColor: UIColor = .green
      var wrongColor: UIColor = .red
-
-
-
+    @State private var shuffledAnswers: [(index: Int, answer: String)] = []
+    @State private var gradientColors: [Color] = [Color.purple, Color.pink]
+    @State private var lastColor : Color? = nil
+    @State private var currentColor = Color.white
+    @State private var lastLastColor: [Color] = [Color.purple, Color.pink]
+    @State private var targetGradient: [Color] = [Color.purple, Color.pink]
+    @State private var currentGradient: [Color] = [Color.purple, Color.pink]
     
     var body: some View {
-          ZStack {
-              currentColor.ignoresSafeArea()
-
-              VStack(spacing: 20) {
-                  Text("Questions that aren't common knowledge")
-                      .font(.largeTitle)
-                      .bold()
-
-                  // Question Text with shaking animation
-                  Text(questions[questionIndex].question)
-                      .font(.title2)
-                      .multilineTextAlignment(.center)
-                      .rotation3DEffect(textRotation, axis: (x: Double.random(in: 0...20), y: Double.random(in: 0...20), z: Double.random(in: 0...20)))
-                      .offset(textOffset)
-                      .animation(.easeInOut(duration: 0.3), value: textRotation)
-                      .animation(.easeInOut(duration: 0.3), value: textOffset)
-                      .animation(.easeInOut(duration: 0.3), value: shakeAmount)
-
-                  // Answer Buttons
-                  ForEach(0..<4, id: \.self) { index in
-                      Button(action: {
-                          checkAnswer(selected: index)
-                      }) {
-                          Text(questions[questionIndex].answers[index])
-                              .padding()
-                              .frame(maxWidth: .infinity)
-                              .background(isAnswered ? isCorrect ? Color.gray : Color.black : Color.blue)
-                              .foregroundColor(.white)
-                              .cornerRadius(isAnswered ? 5 : 10)
-                      }
-                      .disabled(isAnswered)
-                  }
-
-                  Text(message)
-                      .font(.headline)
-                      .padding()
-
-                  Text("Score: \(score)")
-                      .font(.headline)
-
-                  ProgressBar(progress: CGFloat(questionIndex + 1) / CGFloat(10))
-                      .frame(height: 20)
-                      .padding()
-
-                  Button(action: nextQuestion) {
-                      Text("Next Question")
-                          .padding()
-                          .background(isAnswered ? Color.green : Color.gray)
-                          .foregroundColor(.white)
-                          .cornerRadius(8)
-                  }
-                  .padding()
-                  .disabled(!isAnswered)
-              }
-              .padding()
-          }
-      }
-
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(colors: gradientColors),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+                currentColor.ignoresSafeArea()
+                
+                
+                
+                VStack(spacing: 20) {
+                    Text("No clue!")
+                        .font(.largeTitle)
+                        .bold()
+                    
+                    // Question Text with shaking animation
+                    Text(questions[questionIndex].question)
+                        .font(.title2)
+                        .multilineTextAlignment(.center)
+                        .rotation3DEffect(textRotation, axis: (x: Double.random(in: 0...20), y: Double.random(in: 0...20), z: Double.random(in: 0...20)))
+                        .offset(textOffset)
+                        .animation(.easeInOut(duration: 0.3), value: textRotation)
+                        .animation(.easeInOut(duration: 0.3), value: textOffset)
+                        .animation(.easeInOut(duration: 0.3), value: shakeAmount)
+                    
+                    // Answer Buttons
+                    ForEach(shuffledAnswers, id: \.index) { item in
+                        Button(action: {
+                            checkAnswer(selected: item.index)
+                        }) {
+                            Text(item.answer)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(isAnswered ? isCorrect ? Color.gray : Color.black : Color.blue)
+                                .foregroundColor(isAnswered ? isCorrect ? Color.green : Color.red : Color.white)
+                                .cornerRadius(isAnswered ? 5 : 10)
+                            
+                                .rotation3DEffect(textRotation, axis: (x: Double.random(in: 0...20), y: Double.random(in: 0...20), z: Double.random(in: 0...20)))
+                                .offset(textOffset)
+                                .animation(.easeInOut(duration: 0.3), value: textRotation)
+                                .animation(.easeInOut(duration: 0.3), value: textOffset)
+                                .animation(.easeInOut(duration: 0.3), value: shakeAmount)
+                            
+                        }
+                        .disabled(isAnswered)
+                    }
+                    
+                    Text(message)
+                        .font(.headline)
+                        .padding()
+                    
+                    Text("Score: \(score)")
+                        .font(.headline)
+                    
+                    ProgressBar(progress: CGFloat(questionIndex + 1) / CGFloat(10))
+                        .frame(height: 20)
+                        .padding()
+                    
+                    Button(action: nextQuestion) {
+                        Text("Next Question")
+                            .padding()
+                            .background(isAnswered ? Color.green : Color.gray)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .padding()
+                    .disabled(!isAnswered)
+                }
+                .padding()
+                .onAppear {
+                    shuffledAnswers = questions[questionIndex].shuffledAnswers
+                }
+            }
+        }
       struct ProgressBar: View {
           var progress: CGFloat
 
@@ -147,33 +175,35 @@ struct ContentView: View {
           }
       }
 
-      func checkAnswer(selected: Int) {
-          let correctAnswer = questions[questionIndex].correctAnswer
-          if selected == correctAnswer {
-              message = correctMessages.randomElement() ?? "Correct!"
-              score += 1
-              endColor = Color.green
-              startColor = Color.white
-              isCorrect = true
+    func checkAnswer(selected: Int) {
+        let correctAnswer = shuffledAnswers.first(where: { $0.index == questions[questionIndex].correctAnswer })?.index
+        if selected == correctAnswer {
+            message = correctMessages.randomElement() ?? "Correct!"
+            score += 1
+            endColor = Color.green
+            startColor = Color.clear.opacity(0)
+            currentColor = Color.clear.opacity(0)
+            isCorrect = true
+        } else {
+            message = incorrectMessages.randomElement() ?? "Wrong!"
+            score -= 1
+            isCorrect = false
+            endColor = Color.red
+            // Set startColor to the last color in gradientColors
+            startColor = Color.clear.opacity(0)
+            currentColor = Color.clear.opacity(0)
+            shakeAnimation()
+        }
+        isAnswered = true
+        isAnimating = true
+        startAnimation()
+    }
 
-          } else {
-              message = incorrectMessages.randomElement() ?? "Wrong!"
-              score -= 1
-              isCorrect = false
-              endColor = Color.red
-              startColor = Color.white
-              shakeAnimation()
-             
-          }
-          isAnswered = true
-          isAnimating = true
-          startAnimation()
-      }
 
       func shakeAnimation() {
           withAnimation(Animation.default.repeatCount(4, autoreverses: true)) {
               textRotation = .degrees(Double.random(in: -360...360))
-              textOffset = CGSize(width: 20, height: 20)
+              textOffset = CGSize(width: Double.random(in: -20...20), height: Double.random(in: -20...20))
               shakeAmount = 5
           }
           DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
@@ -194,9 +224,11 @@ struct ContentView: View {
               shakeAmount = 0
               startColor = currentColor
               isAnimating = true
-
-              endColor = Color.white
+            
+              endColor = Color.clear.opacity(0)
+              backgroundAnimation()
               startAnimation()
+              shuffledAnswers = questions[questionIndex].shuffledAnswers
           } else {
               message = "Quiz complete! Your final score is \(score)."
               score = 0
@@ -206,41 +238,70 @@ struct ContentView: View {
               textOffset = .zero
               shakeAmount = 0
               isAnimating = true
-
               startColor = currentColor
               endColor = Color.purple
               startAnimation()
+              backgroundAnimation()
+              shuffledAnswers = questions[questionIndex].shuffledAnswers
           }
       }
     func startAnimation() {
-          progress = 0.0
+          progresse = 0.0
           Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
-              if progress >= 1.0 || !isAnimating {
+              if progresse >= 1.0 || !isAnimating {
                   timer.invalidate()
                   if isAnimating {
                       // Reset animation for the next question
-                      progress = 0.0
+                      progresse = 0.0
                       currentColor = endColor
-                      isAnimating = false
-                  }
+                      isAnimating = false                  }
               } else {
-                  progress += 0.01
-                  currentColor = Color.lerp(from: startColor, to: endColor, progress: progress)
+                  progresse += 0.01
+                  currentColor = Color.lerp(from: startColor, to: endColor, progress: progresse)
               }
           }
       }
 
-  }
+      func generateRandomColors() -> [Color] {
+        (0..<2).map { _ in Color(hue: .random(in: 0...1), saturation: 0.8, brightness: 0.9)}
+    }
+      func backgroundAnimation() {
+          progress = 0.0
+          Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
+              progress += 0.01
+              gradientColors = currentGradient
+              targetGradient = generateRandomColors()
+              currentGradient = Color.lerpArray(fromColors: currentGradient, toColors: targetGradient, progress: progress)
+              if progress < 1 {
+                  progress = 0
+                  targetGradient = currentGradient
+                  lastLastColor = currentGradient
+              }
+          }
+        }
+
+    }
+
 extension Color {
     static func lerp(from: Color, to: Color, progress: CGFloat) -> Color {
-        let fromComponents = UIColor(from).cgColor.components ?? [0, 0, 0, 1]
-        let toComponents = UIColor(to).cgColor.components ?? [0, 0, 0, 1]
+        let fromComponents = UIColor(from).cgColor.components ?? [0, 0, 0, 1, 1]
+        let toComponents = UIColor(to).cgColor.components ?? [0, 0, 0, 1, 1]
         let r = fromComponents[0] + (toComponents[0] - fromComponents[0]) * progress
         let g = fromComponents[1] + (toComponents[1] - fromComponents[1]) * progress
         let b = fromComponents[2] + (toComponents[2] - fromComponents[2]) * progress
-        return Color(red: r, green: g, blue: b)
+        let o = fromComponents[3] + (toComponents[3] - fromComponents[3]) * progress
+        return Color(red: r, green: g, blue: b).opacity(o)
     }
+    // Lerp between an array of colors rather than one
+    static func lerpArray(fromColors: [Color], toColors: [Color], progress: CGFloat) -> [Color] {
+        let count = min(fromColors.count, toColors.count)
+        return (0..<count).map { index in
+            lerp(from: fromColors[index], to: toColors[index], progress: progress)
+        }
+    }
+
 }
+
 
   #Preview {
       ContentView()
