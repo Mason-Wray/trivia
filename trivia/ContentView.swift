@@ -72,16 +72,12 @@ struct ContentView: View {
     @State private var isAnimating = false
     @State private var textRotation: Angle = .zero
     private var offset: CGFloat = 0.0
-    private var timer: CADisplayLink?
     @State private var textOffset: CGSize = .zero
     @State private var shakeAmount: CGFloat = 0
-    var correctColor: UIColor = .green
-     var wrongColor: UIColor = .red
     @State private var shuffledAnswers: [(index: Int, answer: String)] = []
     @State private var gradientColors: [Color] = [Color.purple, Color.pink]
     @State private var lastColor : Color? = nil
     @State private var currentColor = Color.white
-    @State private var lastLastColor: [Color] = [Color.purple, Color.pink]
     @State private var targetGradient: [Color] = [Color.purple, Color.pink]
     @State private var currentGradient: [Color] = [Color.purple, Color.pink]
     
@@ -275,7 +271,6 @@ struct ContentView: View {
               if progress < 1 {
                   progress = 0
                   targetGradient = currentGradient
-                  lastLastColor = currentGradient
               }
           }
         }
